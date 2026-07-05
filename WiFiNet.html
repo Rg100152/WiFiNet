@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFiNet — Smart Fiber Internet Booking</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --secondary: #06B6D4;
+            --accent: #8B5CF6;
+            --bg: #060816;
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-hover: rgba(255, 255, 255, 0.10);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text: #FFFFFF;
+            --text-secondary: #a1a1aa;
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --radius: 24px;
+            --radius-sm: 14px;
+            --radius-xs: 10px;
+            --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --gradient-1: linear-gradient(135deg, #4F46E5, #8B5CF6);
+            --gradient-2: linear-gradient(135deg, #06B6D4, #4F46E5);
+            --gradient-3: linear-gradient(135deg, #8B5CF6, #06B6D4);
+            --aurora-1: #4F46E5;
+            --aurora-2: #8B5CF6;
+            --aurora-3: #06B6D4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: #4F46E5 #060816;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #060816;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4F46E5;
+            border-radius: 10px;
+        }
+        body {
+            font-family: 'Poppins', 'Inter', 'Space Grotesk', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        /* ---- AURORA BACKGROUND ---- */
+        .aurora-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .aurora-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.22;
+            animation: auroraFloat 14s ease-in-out infinite;
+        }
+        .aurora-blob:nth-child(1) {
+            width: 600px;
+            height: 600px;
+            background: var(--aurora-1);
+            top: -150px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+        .aurora-blob:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            background: var(--aurora-2);
+            bottom: -120px;
+            right: -80px;
+            animation-delay: -6s;
+        }
+        .aurora-blob:nth-child(3) {
+            width: 400px;
+            height: 400px;
+            background: var(--aurora-3);
+            top: 45%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+        @keyframes auroraFloat {
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(60px, -40px) scale(1.1);
+            }
+            50% {
+                transform: translate(-30px, 30px) scale(0.9);
+            }
+            75% {
+                transform: translate(-50px, -20px) scale(1.05);
+            }
+        }
+        /* ---- NAVBAR ---- */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(6, 8, 22, 0.8);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .logo {
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links a,
+        .nav-links button {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+        }
+        .nav-links a:hover {
+            color: #fff;
+            background: var(--glass);
+        }
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+        /* ---- MAIN CONTAINER ---- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        /* ---- PAGE SYSTEM ---- */
+        .page {
+            display: none;
+            animation: fadeSlide 0.45s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* ---- GLASS CARD ---- */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.6rem;
+            box-shadow: var(--shadow-glass);
+            transition: all var(--transition);
+        }
+        .glass-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+        /* ---- BENTO GRID ---- */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto;
+            gap: 1rem;
+        }
+        .bento-item {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.4rem;
+            transition: all var(--transition);
+            min-height: 120px;
+        }
+        .bento-item:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: var(--glass-hover);
+        }
+        .bento-item.wide {
+            grid-column: span 2;
+        }
+        .bento-item.tall {
+            grid-row: span 2;
+        }
+        .bento-item.xwide {
+            grid-column: span 3;
+        }
+        /* ---- BUTTONS ---- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.7rem 1.6rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition);
+            text-decoration: none;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: var(--gradient-1);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.35);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 8px 30px rgba(79, 70, 229, 0.55);
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+        }
+        .btn-outline:hover {
+            background: var(--secondary);
+            color: #060816;
+        }
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.75rem;
+        }
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+        /* ---- FORMS ---- */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xs);
+            color: #fff;
+            font-size: 0.88rem;
+            outline: none;
+            font-family: inherit;
+            transition: border var(--transition);
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        /* ---- PLAN CARDS ---- */
+        .plan-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.8rem;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: pointer;
+        }
+        .plan-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(79, 70, 229, 0.2);
+        }
+        .plan-card.featured {
+            border-color: var(--secondary);
+            background: rgba(6, 182, 212, 0.08);
+        }
+        .plan-speed {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+        .plan-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        /* ---- TIMELINE ---- */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--glass-border);
+        }
+        .timeline-step {
+            position: relative;
+            margin-bottom: 18px;
+            padding-left: 20px;
+        }
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 5px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--glass-border);
+            border: 3px solid #060816;
+            z-index: 1;
+        }
+        .timeline-step.completed::before {
+            background: var(--success);
+        }
+        .timeline-step.active::before {
+            background: var(--primary);
+            box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.2);
+        }
+        /* ---- TOAST ---- */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.8rem 1.4rem;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            animation: toastIn 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .toast-success {
+            background: var(--success);
+        }
+        .toast-error {
+            background: var(--danger);
+        }
+        @keyframes toastIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .bento-item.wide,
+            .bento-item.xwide {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            .bento-item.wide,
+            .bento-item.xwide {
+                grid-column: span 1;
+            }
+            .nav-links {
+                display: none;
+                position: fixed;
+                top: 56px;
+                left: 0;
+                width: 100%;
+                background: rgba(6, 8, 22, 0.95);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 0.4rem;
+                border-bottom: 1px solid var(--glass-border);
+                z-index: 99;
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .hamburger {
+                display: block;
+            }
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AURORA BACKGROUND -->
+    <div class="aurora-bg">
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo" onclick="navigateTo('home')">📶 WiFiNet</div>
+        <button class="hamburger" id="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+        <div class="nav-links" id="navLinks">
+            <a onclick="navigateTo('home')">Home</a>
+            <a onclick="navigateTo('plans')">Plans</a>
+            <a onclick="navigateTo('availability')">Availability</a>
+            <a onclick="navigateTo('booking')">Book</a>
+            <a onclick="navigateTo('dashboard')" id="navDash" style="display:none;">Dashboard</a>
+            <a onclick="navigateTo('tracker')" id="navTrack" style="display:none;">Tracker</a>
+            <a onclick="navigateTo('support')">Support</a>
+            <button class="btn btn-sm btn-outline" onclick="navigateTo('login')" id="navLogin">Login</button>
+            <button class="btn btn-sm btn-primary" onclick="navigateTo('register')" id="navReg">Register</button>
+            <button class="btn btn-sm" style="background:var(--danger);display:none;" id="logoutBtn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container" id="mainContent"></div>
+
+    <script>
+        // ==================== STATE ENGINE ====================
+        const DB_KEY = 'wifinet_db';
+        const defaultDB = {
+            users: {
+                'customer@demo.com': { password: 'demo123', name: 'Rahul Sharma', mobile: '9876543210', address: '42 Fiber Lane, Mumbai',
+                    pin: '400001', role: 'customer' }
+            },
+            bookings: [],
+            tickets: [],
+            connections: [],
+            nextBookingId: 1001,
+            nextTicketId: 5001
+        };
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || defaultDB;
+        if (!localStorage.getItem(DB_KEY)) localStorage.setItem(DB_KEY, JSON.stringify(db));
+
+        function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+        let currentUser = null;
+        let currentPage = 'home';
+
+        // ==================== UTILS ====================
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0';
+                t.style.transition = '0.3s';
+                setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        function navigateTo(page) {
+            currentPage = page;
+            document.getElementById('navLinks').classList.remove('open');
+            updateNav();
+            renderPage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateNav() {
+            const logged = !!currentUser;
+            document.getElementById('navLogin').style.display = logged ? 'none' : 'inline-flex';
+            document.getElementById('navReg').style.display = logged ? 'none' : 'inline-flex';
+            document.getElementById('navDash').style.display = logged ? 'inline' : 'none';
+            document.getElementById('navTrack').style.display = logged ? 'inline' : 'none';
+            document.getElementById('logoutBtn').style.display = logged ? 'inline-flex' : 'none';
+        }
+
+        function logout() { currentUser = null;
+            navigateTo('home');
+            showToast('Logged out'); }
+
+        // ==================== RENDER ENGINE ====================
+        function renderPage() {
+            const m = document.getElementById('mainContent');
+            switch (currentPage) {
+                case 'home':
+                    m.innerHTML = homeHTML();
+                    break;
+                case 'login':
+                    m.innerHTML = loginHTML();
+                    break;
+                case 'register':
+                    m.innerHTML = registerHTML();
+                    break;
+                case 'dashboard':
+                    m.innerHTML = dashboardHTML();
+                    break;
+                case 'plans':
+                    m.innerHTML = plansHTML();
+                    break;
+                case 'availability':
+                    m.innerHTML = availabilityHTML();
+                    break;
+                case 'booking':
+                    m.innerHTML = bookingHTML();
+                    break;
+                case 'tracker':
+                    m.innerHTML = trackerHTML();
+                    break;
+                case 'payment':
+                    m.innerHTML = paymentHTML();
+                    break;
+                case 'receipt':
+                    m.innerHTML = receiptHTML();
+                    break;
+                case 'connection':
+                    m.innerHTML = connectionHTML();
+                    break;
+                case 'analytics':
+                    m.innerHTML = analyticsHTML();
+                    break;
+                case 'support':
+                    m.innerHTML = supportHTML();
+                    break;
+                case 'about':
+                    m.innerHTML = aboutHTML();
+                    break;
+                case 'contact':
+                    m.innerHTML = contactHTML();
+                    break;
+                default:
+                    m.innerHTML = homeHTML();
+            }
+            attachEvents();
+        }
+
+        function attachEvents() {
+            if (currentPage === 'login') document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
+            if (currentPage === 'register') document.getElementById('registerForm')?.addEventListener('submit',
+            handleRegister);
+            if (currentPage === 'booking') document.getElementById('bookingForm')?.addEventListener('submit',
+            handleBooking);
+            if (currentPage === 'availability') document.getElementById('checkAvailBtn')?.addEventListener('click',
+                checkAvailability);
+            if (currentPage === 'payment') document.getElementById('payBtn')?.addEventListener('click', handlePayment);
+            if (currentPage === 'support') document.getElementById('ticketForm')?.addEventListener('submit',
+            handleTicket);
+            if (currentPage === 'analytics') drawUsageChart();
+        }
+
+        // ==================== HTML PAGES ====================
+        function homeHTML() {
+            return `
+            <div style="text-align:center;padding:3rem 0 1rem;">
+              <h1 style="font-size:3.5rem;font-weight:900;background:var(--gradient-1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;">Lightning Fast<br>Fiber Internet</h1>
+              <p style="color:var(--text-secondary);max-width:550px;margin:1rem auto;font-size:1.05rem;">Experience blazing speeds up to 1 Gbps with WiFiNet. Book your connection today.</p>
+              <button class="btn btn-primary" onclick="navigateTo('plans')" style="margin-right:0.6rem;">🚀 View Plans</button>
+              <button class="btn btn-outline" onclick="navigateTo('availability')">📍 Check Availability</button>
+            </div>
+            <div class="bento-grid" style="margin:2rem 0;">
+              <div class="bento-item wide" style="text-align:center;display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;">
+                <div><div style="font-size:2.5rem;">⚡</div><strong>1 Gbps</strong><br><span style="color:var(--text-secondary);">Max Speed</span></div>
+                <div><div style="font-size:2.5rem;">🛡️</div><strong>99.9%</strong><br><span style="color:var(--text-secondary);">Uptime</span></div>
+                <div><div style="font-size:2.5rem;">🌍</div><strong>50+</strong><br><span style="color:var(--text-secondary);">Cities</span></div>
+              </div>
+              <div class="bento-item"><h4>🎯 Instant Booking</h4><p style="color:var(--text-secondary);font-size:0.82rem;">Book online in 2 minutes</p></div>
+              <div class="bento-item"><h4>📡 24/7 Support</h4><p style="color:var(--text-secondary);font-size:0.82rem;">Always here to help</p></div>
+            </div>
+            <h2 style="text-align:center;margin:2rem 0 1rem;">💬 What Our Customers Say</h2>
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+              <div class="glass-card" style="max-width:300px;"><p>"Best internet service ever! Lightning fast."</p><strong style="color:var(--secondary);">— Priya M.</strong></div>
+              <div class="glass-card" style="max-width:300px;"><p>"Installation was smooth, speed is incredible."</p><strong style="color:var(--secondary);">— Arjun K.</strong></div>
+              <div class="glass-card" style="max-width:300px;"><p>"WiFiNet changed my work-from-home life."</p><strong style="color:var(--secondary);">— Sneha R.</strong></div>
+            </div>
+            <footer style="text-align:center;padding:2rem 0;color:var(--text-secondary);font-size:0.8rem;border-top:1px solid var(--glass-border);margin-top:2rem;">
+              <p>📶 WiFiNet © 2026 — Connecting Homes with High-Speed Digital Experiences</p>
+            </footer>`;
+        }
+
+        function loginHTML() {
+            return `<div class="glass-card" style="max-width:420px;margin:2rem auto;"><h2>🔐 Login</h2>
+            <form id="loginForm"><div class="form-group"><label>Email</label><input type="email" id="loginEmail" required placeholder="customer@demo.com"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPass" required placeholder="demo123"></div>
+            <button type="submit" class="btn btn-primary btn-full">Login</button></form>
+            <p style="text-align:center;margin-top:0.8rem;font-size:0.78rem;color:var(--text-secondary);">Demo: customer@demo.com / demo123</p></div>`;
+        }
+
+        function registerHTML() {
+            return `<div class="glass-card" style="max-width:480px;margin:2rem auto;"><h2>📝 Register</h2>
+            <form id="registerForm"><div class="grid-2"><div class="form-group"><label>Full Name</label><input type="text" id="regName" required></div>
+            <div class="form-group"><label>Mobile</label><input type="tel" id="regMobile" required></div></div>
+            <div class="form-group"><label>Email</label><input type="email" id="regEmail" required></div>
+            <div class="form-group"><label>Address</label><input type="text" id="regAddr"></div>
+            <div class="grid-2"><div class="form-group"><label>PIN Code</label><input type="text" id="regPin"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="regPass" required></div></div>
+            <button type="submit" class="btn btn-primary btn-full">Create Account</button></form></div>`;
+        }
+
+        function dashboardHTML() {
+            if (!currentUser) return '<p>Please login.</p>';
+            const booking = db.bookings.find(b => b.email === currentUser.email);
+            const conn = db.connections.find(c => c.email === currentUser.email);
+            return `
+            <h2>📊 Welcome, ${currentUser.name}</h2>
+            <div class="bento-grid" style="margin-top:1rem;">
+              <div class="bento-item wide"><h4>⚡ Active Plan</h4><p style="font-size:1.5rem;font-weight:700;color:var(--secondary);">${conn?.plan||'No active plan'}</p><p style="color:var(--text-secondary);">${conn?`Speed: ${conn.speed}`:'Book a plan to get started'}</p></div>
+              <div class="bento-item"><h4>📡 Status</h4><p style="color:${conn?'var(--success)':'var(--warning)'};">${conn?conn.status:'Not Connected'}</p></div>
+              <div class="bento-item"><h4>💰 Bill</h4><p style="color:var(--text-secondary);">${conn?`₹${conn.price}/month`:'N/A'}</p></div>
+              <div class="bento-item wide"><h4>📊 Quick Actions</h4>
+                <button class="btn btn-sm btn-primary" onclick="navigateTo('plans')">View Plans</button>
+                <button class="btn btn-sm btn-outline" onclick="navigateTo('payment')">Pay Bill</button>
+                <button class="btn btn-sm btn-outline" onclick="navigateTo('support')">Support</button>
+              </div>
+            </div>`;
+        }
+
+        function plansHTML() {
+            const plans = [
+                { name: 'Starter', speed: '100 Mbps', price: 499, ott: 'None', featured: false },
+                { name: 'Silver', speed: '200 Mbps', price: 699, ott: 'Amazon Prime', featured: false },
+                { name: 'Gold', speed: '300 Mbps', price: 999, ott: 'Netflix+Prime', featured: true },
+                { name: 'Platinum', speed: '500 Mbps', price: 1499, ott: 'All OTT', featured: false },
+                { name: 'Titan', speed: '1 Gbps', price: 2499, ott: 'All OTT + Gaming', featured: false },
+            ];
+            return `
+            <h2 style="text-align:center;">📡 Broadband Plans</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1.5rem;">
+              ${plans.map(p=>`
+                <div class="plan-card ${p.featured?'featured':''}">
+                  <h3>${p.name}</h3>
+                  <div class="plan-speed">${p.speed}</div>
+                  <div class="plan-price">₹${p.price}<span style="font-size:0.9rem;color:var(--text-secondary);">/mo</span></div>
+                  <p style="color:var(--text-secondary);font-size:0.82rem;">✅ Unlimited Data<br>✅ Router Included<br>🎬 ${p.ott}</p>
+                  <button class="btn btn-primary btn-sm" style="margin-top:0.6rem;" onclick="selectPlan('${p.name}','${p.speed}',${p.price})">Book Now</button>
+                </div>`).join('')}
+            </div>`;
+        }
+
+        function availabilityHTML() {
+            return `<div class="glass-card" style="max-width:480px;margin:2rem auto;"><h2>📍 Check Availability</h2>
+            <div class="form-group"><label>PIN Code</label><input type="text" id="availPin" placeholder="400001"></div>
+            <button class="btn btn-primary btn-full" id="checkAvailBtn">Check</button>
+            <div id="availResult" style="margin-top:1rem;text-align:center;"></div></div>`;
+        }
+
+        function bookingHTML() {
+            return `<div class="glass-card" style="max-width:600px;margin:2rem auto;"><h2>📋 Book Connection</h2>
+            <form id="bookingForm">
+              <div class="grid-2"><div class="form-group"><label>Full Name</label><input type="text" id="bookName" required></div>
+              <div class="form-group"><label>Mobile</label><input type="tel" id="bookMobile" required></div></div>
+              <div class="form-group"><label>Email</label><input type="email" id="bookEmail" required></div>
+              <div class="form-group"><label>Address</label><input type="text" id="bookAddr" required></div>
+              <div class="grid-2"><div class="form-group"><label>Plan</label><select id="bookPlan"><option>Starter - 100 Mbps - ₹499</option><option>Silver - 200 Mbps - ₹699</option><option selected>Gold - 300 Mbps - ₹999</option><option>Platinum - 500 Mbps - ₹1499</option><option>Titan - 1 Gbps - ₹2499</option></select></div>
+              <div class="form-group"><label>Installation Date</label><input type="date" id="bookDate" required></div></div>
+              <div class="form-group"><label>Preferred Time</label><select id="bookTime"><option>9AM-12PM</option><option>12PM-3PM</option><option>3PM-6PM</option></select></div>
+              <button type="submit" class="btn btn-primary btn-full">Submit Booking</button></form></div>`;
+        }
+
+        function trackerHTML() {
+            const booking = currentUser ? db.bookings.find(b => b.email === currentUser.email) : null;
+            const stages = ['Booking Received', 'Verification', 'Engineer Assigned', 'Installation', 'Activated'];
+            const currentStage = booking ? (booking.statusStage || 0) : 0;
+            return `<div class="glass-card" style="max-width:550px;margin:2rem auto;"><h2>🔧 Installation Tracker</h2>
+            <div class="timeline">${stages.map((s,i)=>`<div class="timeline-step ${i<currentStage?'completed':''} ${i===currentStage?'active':''}"><h4>${s}</h4><p style="color:var(--text-secondary);font-size:0.78rem;">${i<currentStage?'✅ Done':i===currentStage?'🔄 In Progress':'⏳ Pending'}</p></div>`).join('')}</div>
+            ${!booking?'<p style="text-align:center;color:var(--text-secondary);">No active booking. <a style="color:var(--secondary);cursor:pointer;" onclick="navigateTo(\'booking\')">Book now</a></p>':''}</div>`;
+        }
+
+        function paymentHTML() {
+            const conn = currentUser ? db.connections.find(c => c.email === currentUser.email) : null;
+            const amt = conn ? conn.price : 999;
+            return `<div class="glass-card" style="max-width:420px;margin:2rem auto;"><h2>💳 Payment</h2>
+            <p style="text-align:center;font-size:1.2rem;">Amount: <strong style="color:var(--secondary);">₹${amt}</strong></p>
+            <div class="form-group"><label>Method</label><select id="payMethod"><option>UPI</option><option>Debit Card</option><option>Credit Card</option><option>Net Banking</option></select></div>
+            <button class="btn btn-primary btn-full" id="payBtn">Pay ₹${amt}</button></div>`;
+        }
+
+        function receiptHTML() {
+            const rid = 'RCPT-' + Date.now().toString(36).toUpperCase();
+            const conn = currentUser ? db.connections.find(c => c.email === currentUser.email) : null;
+            return `<div class="glass-card" style="max-width:450px;margin:2rem auto;text-align:center;">
+            <h2 style="color:var(--success);">✅ Payment Successful!</h2>
+            <p>Receipt: <strong>${rid}</strong></p>
+            <p>Amount: ₹${conn?.price||999}</p>
+            <p>Date: ${new Date().toLocaleDateString()}</p>
+            <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print</button></div>`;
+        }
+
+        function connectionHTML() {
+            const conn = currentUser ? db.connections.find(c => c.email === currentUser.email) : null;
+            if (!conn) return '<p style="text-align:center;">No active connection.</p>';
+            return `<div class="glass-card" style="max-width:500px;margin:2rem auto;"><h2>📡 My Connection</h2>
+            <p><strong>ID:</strong> ${conn.id}</p><p><strong>Plan:</strong> ${conn.plan}</p>
+            <p><strong>Speed:</strong> ${conn.speed}</p><p><strong>Status:</strong> <span style="color:var(--success);">${conn.status}</span></p>
+            <p><strong>Installed:</strong> ${conn.installDate}</p><p><strong>Renewal:</strong> ${conn.renewalDate}</p></div>`;
+        }
+
+        function analyticsHTML() {
+            return `<div class="glass-card"><h2>📈 Usage Analytics</h2><canvas id="usageChart" width="500" height="250" style="max-width:100%;"></canvas></div>`;
+        }
+
+        function supportHTML() {
+            const tickets = currentUser ? db.tickets.filter(t => t.email === currentUser.email) : [];
+            return `<div class="glass-card" style="max-width:550px;margin:2rem auto;"><h2>🎧 Support Center</h2>
+            <form id="ticketForm"><div class="form-group"><label>Issue</label><select id="ticketType"><option>Billing</option><option>Speed</option><option>Installation</option><option>Other</option></select></div>
+            <div class="form-group"><label>Description</label><textarea id="ticketDesc" rows="2"></textarea></div>
+            <button type="submit" class="btn btn-primary btn-full">Raise Ticket</button></form>
+            <div style="margin-top:1rem;">${tickets.map(t=>`<div class="glass-card" style="margin-bottom:0.5rem;padding:1rem;"><strong>#${t.id}</strong> — ${t.type} <span style="color:${t.status==='Open'?'var(--warning)':'var(--success)'};">${t.status}</span></div>`).join('')}</div></div>`;
+        }
+
+        function aboutHTML() {
+            return `<div class="glass-card" style="text-align:center;max-width:600px;margin:2rem auto;"><h2>ℹ️ About WiFiNet</h2>
+            <p>WiFiNet is India's fastest-growing fiber broadband provider, delivering high-speed internet to homes and businesses.</p>
+            <p style="color:var(--secondary);margin-top:1rem;">Developer: Raj Gautam · BCA Student · Cyber Security Enthusiast</p></div>`;
+        }
+
+        function contactHTML() {
+            return `<div class="glass-card" style="max-width:450px;margin:2rem auto;"><h2>📞 Contact</h2>
+            <input placeholder="Name" style="width:100%;margin-bottom:0.5rem;padding:0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:10px;color:#fff;"><br>
+            <textarea placeholder="Message" rows="3" style="width:100%;margin-bottom:0.5rem;padding:0.7rem;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:10px;color:#fff;"></textarea><br>
+            <button class="btn btn-primary btn-full" onclick="showToast('Message sent!')">Send</button>
+            <p style="text-align:center;margin-top:0.8rem;color:var(--text-secondary);">📧 support@wifinet.com | 📞 1800-123-4567</p></div>`;
+        }
+
+        // ==================== EVENT HANDLERS ====================
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value;
+            const user = db.users[email];
+            if (user && user.password === pass) { currentUser = { email, ...user };
+                showToast('Welcome, ' + user.name);
+                navigateTo('dashboard'); } else showToast('Invalid credentials', 'error');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPass').value;
+            if (db.users[email]) { showToast('Email already registered', 'error'); return; }
+            db.users[email] = { password: pass, name: document.getElementById('regName').value, mobile: document
+                    .getElementById('regMobile').value, address: document.getElementById('regAddr').value, pin: document
+                    .getElementById('regPin').value, role: 'customer' };
+            saveDB();
+            showToast('Registered! Please login.');
+            navigateTo('login');
+        }
+
+        function selectPlan(name, speed, price) {
+            if (!currentUser) { showToast('Please login first', 'error');
+                navigateTo('login'); return; }
+            document.getElementById('bookPlan') && (document.getElementById('bookPlan').value =
+                `${name} - ${speed} - ₹${price}`);
+            navigateTo('booking');
+        }
+
+        function handleBooking(e) {
+            e.preventDefault();
+            if (!currentUser) { showToast('Please login', 'error'); return; }
+            const planStr = document.getElementById('bookPlan').value;
+            const [name, speed, priceStr] = planStr.split(' - ');
+            const price = parseInt(priceStr.replace('₹', ''));
+            const booking = {
+                id: 'BK' + db.nextBookingId++,
+                email: currentUser.email,
+                name: document.getElementById('bookName').value,
+                mobile: document.getElementById('bookMobile').value,
+                address: document.getElementById('bookAddr').value,
+                plan: name,
+                speed,
+                price,
+                date: document.getElementById('bookDate').value,
+                time: document.getElementById('bookTime').value,
+                statusStage: 0,
+                createdAt: new Date().toISOString()
+            };
+            db.bookings.push(booking);
+            db.connections.push({ id: 'CONN-' + Date.now().toString(36).toUpperCase(), email: currentUser.email, plan: name,
+                speed, price, status: 'Active', installDate: booking.date, renewalDate: new Date(Date.now() + 30 * 24 *
+                    60 * 60 * 1000).toLocaleDateString() });
+            saveDB();
+            showToast('Booking confirmed!');
+            navigateTo('tracker');
+        }
+
+        function checkAvailability() {
+            const pin = document.getElementById('availPin').value.trim();
+            const r = document.getElementById('availResult');
+            if (pin === '400001' || pin === '110001') r.innerHTML =
+                '<p style="color:var(--success);font-size:1.2rem;">✅ Available in your area!</p><button class="btn btn-primary btn-sm" onclick="navigateTo(\'plans\')">View Plans</button>';
+            else r.innerHTML =
+                '<p style="color:var(--warning);">⏳ Coming Soon</p>';
+        }
+
+        function handlePayment() {
+            const conn = currentUser ? db.connections.find(c => c.email === currentUser.email) : null;
+            if (conn) { conn.status = 'Active';
+                saveDB(); }
+            navigateTo('receipt');
+            showToast('Payment successful!');
+        }
+
+        function handleTicket(e) {
+            e.preventDefault();
+            if (!currentUser) { showToast('Login required', 'error'); return; }
+            db.tickets.push({ id: 'TKT' + db.nextTicketId++, email: currentUser.email, type: document.getElementById(
+                    'ticketType').value, desc: document.getElementById('ticketDesc').value, status: 'Open',
+                createdAt: new Date().toISOString() });
+            saveDB();
+            showToast('Ticket raised!');
+            renderPage();
+        }
+
+        function drawUsageChart() {
+            const canvas = document.getElementById('usageChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const vals = [45, 60, 55, 80, 70, 90, 75];
+            const max = Math.max(...vals);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const bw = canvas.width / vals.length - 15;
+            vals.forEach((v, i) => {
+                const h = (v / max) * (canvas.height - 40);
+                ctx.fillStyle = '#4F46E5';
+                ctx.fillRect(i * (bw + 15) + 10, canvas.height - h - 25, bw, h);
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Poppins';
+                ctx.fillText(v + 'GB', i * (bw + 15) + 12, canvas.height - h - 30);
+            });
+        }
+
+        // ==================== INIT ====================
+        updateNav();
+        renderPage();
+        console.log('📶 WiFiNet Ready — Smart Fiber Internet Booking Portal');
+        console.log('Demo: customer@demo.com / demo123');
+    </script>
+</body>
+</html>
